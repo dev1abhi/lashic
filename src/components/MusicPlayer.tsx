@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useEffect, useState } from 'react';
 import { Song } from './types';
 import { SongInfo } from './SongInfo';
@@ -9,6 +5,7 @@ import { Controls } from './Controls';
 import { Vinyl } from './Vinyl';
 import { PlaylistSidebar } from './PlaylistsSidebar';
 import { LyricsSidebar } from './LyricsSidebar';
+import { SearchModal } from './SearchModal';
 import { Slider } from './ui/slider';
 
 const sampleSongs: Song[] = [
@@ -127,6 +124,7 @@ export const MusicPlayer = () => {
   const [volume, setVolume] = useState(70);
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [extractedColors, setExtractedColors] = useState(currentSong.colors);
 
   useEffect(() => {
@@ -140,6 +138,19 @@ export const MusicPlayer = () => {
     });
   }, [currentSong]);
 
+  // Global keyboard shortcut for search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const nextSong = () => {
     const currentIndex = sampleSongs.findIndex(song => song.id === currentSong.id);
     const nextIndex = (currentIndex + 1) % sampleSongs.length;
@@ -150,6 +161,11 @@ export const MusicPlayer = () => {
     const currentIndex = sampleSongs.findIndex(song => song.id === currentSong.id);
     const prevIndex = currentIndex === 0 ? sampleSongs.length - 1 : currentIndex - 1;
     setCurrentSong(sampleSongs[prevIndex]);
+  };
+
+  const handleSelectSong = (song: Song) => {
+    setCurrentSong(song);
+    setIsPlaying(true);
   };
 
   return (
@@ -200,6 +216,7 @@ export const MusicPlayer = () => {
             album={currentSong.album}
             onTogglePlaylist={() => setShowPlaylist((prev) => !prev)}
             onToggleLyrics={() => setShowLyrics((prev) => !prev)}
+            onToggleSearch={() => setShowSearch((prev) => !prev)}
           />
 
           {/* <div className="py-0.5">
@@ -236,12 +253,19 @@ export const MusicPlayer = () => {
           songs={sampleSongs}
           currentSongId={currentSong.id}
           onClose={() => setShowPlaylist(false)}
-          onSelectSong={(song) => setCurrentSong(song)}
+          onSelectSong={handleSelectSong}
         />
 
         <LyricsSidebar
           visible={showLyrics}
           onClose={() => setShowLyrics(false)}
+        />
+
+        <SearchModal
+          visible={showSearch}
+          onClose={() => setShowSearch(false)}
+          songs={sampleSongs}
+          onSelectSong={handleSelectSong}
         />
 
         {(showPlaylist || showLyrics) && (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { List, FileText } from 'lucide-react';
+import { List, FileText, Search } from 'lucide-react';
 
 interface Props {
   title: string;
@@ -8,9 +8,17 @@ interface Props {
   album: string;
   onTogglePlaylist: () => void;
   onToggleLyrics: () => void;
+  onToggleSearch: () => void;
 }
 
-export const SongInfo: React.FC<Props> = ({ title, artist, album, onTogglePlaylist, onToggleLyrics }) => (
+export const SongInfo: React.FC<Props> = ({ 
+  title, 
+  artist, 
+  album, 
+  onTogglePlaylist, 
+  onToggleLyrics, 
+  onToggleSearch 
+}) => (
 <div className="flex flex-col justify-center space-y-1 text-left min-w-0 flex-shrink-0 md:pl-7">
     
 <div  className="overflow-hidden relative w-full h-12 transition-all duration-300" 
@@ -46,6 +54,10 @@ export const SongInfo: React.FC<Props> = ({ title, artist, album, onTogglePlayli
       <Button variant="ghost" onClick={onToggleLyrics} className="text-white hover:bg-white/10 flex items-center space-x-2">
         <FileText className="w-5 h-5" />
         <span>Lyrics</span>
+      </Button>
+      <Button variant="ghost" onClick={onToggleSearch} className="text-white hover:bg-white/10 flex items-center space-x-2">
+        <Search className="w-5 h-5" />
+        <span>Search</span>
       </Button>
     </div>
   </div>
