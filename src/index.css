@@ -1,0 +1,214 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 95%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 30%;
+
+    --radius: 0.5rem;
+
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --backdrop-blur: blur(25px);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+    min-height: 100vh;
+    transition: background 0.8s ease-in-out;
+  }
+}
+
+@layer components {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: var(--backdrop-blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  .vinyl-spin {
+    animation: vinyl-rotate 4s linear infinite;
+  }
+
+  .vinyl-spin-paused {
+    animation-play-state: paused;
+  }
+
+  .vinyl-depth {
+    box-shadow: 
+      0 0 0 2px rgba(255, 255, 255, 0.1),
+      0 8px 32px rgba(0, 0, 0, 0.6),
+      0 16px 64px rgba(0, 0, 0, 0.4),
+      0 24px 96px rgba(0, 0, 0, 0.2);
+    transform: translateZ(0);
+  }
+}
+
+@keyframes vinyl-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.6);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Custom scrollbar for sidebars */
+.glass-strong::-webkit-scrollbar {
+  width: 6px;
+}
+
+.glass-strong::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.glass-strong::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.glass-strong::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* added css for background flow */
+
+.glass-pane {
+  position: fixed;       /* Stays fixed in viewport */
+  top: 0;
+  left: 0;
+  width: 100vw;          /* Full viewport width */
+  height: 100vh;         /* Full viewport height */
+  backdrop-filter: blur(20px);  /* Blur effect */
+  -webkit-backdrop-filter: blur(20px); /* Safari support */
+  background: rgba(255, 255, 255, 0.1); /* Transparent white */
+  pointer-events: none;  /* Let clicks pass through */
+  z-index: 1;            /* Behind UI elements, but above background */
+}
+
+
+.background-flow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.background-flow::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 30%, var(--color1) 0%, transparent 70%),
+              radial-gradient(circle at 70% 60%, var(--color2) 0%, transparent 70%),
+              radial-gradient(circle at 50% 50%, var(--color3) 0%, transparent 70%);
+  background-blend-mode: screen;
+  opacity: 0.35;
+  filter: blur(100px);
+  animation: flowAnimation 10s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes flowAnimation {
+  0% {
+    transform: translate(0%, 0%) scale(1);
+  }
+  25% {
+    transform: translate(-10%, -5%) scale(1.1) rotate(5deg);
+  }
+  50% {
+    transform: translate(5%, -10%) scale(1.2) rotate(-5deg);
+  }
+  75% {
+    transform: translate(-5%, 10%) scale(1.05) rotate(3deg);
+  }
+  100% {
+    transform: translate(0%, 0%) scale(1);
+  }
+}
+
+
+
+/* for wavy slider */
+
+@keyframes wave-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.slider-wave {
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.8) 25%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.8) 75%
+  );
+  background-size: 200% 100%;
+  animation: wave-flow 2s linear infinite;
+}
