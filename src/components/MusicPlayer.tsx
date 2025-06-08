@@ -10,36 +10,24 @@ import { AudioPlayer } from './AudioPlayer';
 import { Slider } from './ui/slider';
 import { toast } from '@/components/ui/sonner';
 import { extractColorsFromImage } from '../utils/colorUtils';
-import { set } from 'date-fns';
+
 
 const sampleSongs: Song[] = [
-  {
-    id: "1",
-    title: "Midnight Dreams", 
-    artist: "Luna Eclipse",
-    album: "Stellar Nights",
-    duration: "3:42",
-    poster: "https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?w=400&h=400&fit=crop",
-    colors: { primary: "#1a1a2e", secondary: "#16213e", accent: "#533483" }
-  },
-  {
-    id: "2",
-    title: "Golden Hour",
-    artist: "Solar Flare",
-    album: "Sunrise Sessions",
-    duration: "4:15",
-    poster: "https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=400&fit=crop",
-    colors: { primary: "#2c1810", secondary: "#3d2817", accent: "#8b4513" }
-  },
-  {
-    id: "3",
-    title: "Ocean Waves",
-    artist: "Aqua Harmony",
-    album: "Deep Blue",
-    duration: "5:23",
-    poster: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?w=400&h=400&fit=crop",
-    colors: { primary: "#0f2027", secondary: "#203a43", accent: "#2c5364" }
+   {
+  id: "JkNTq6Kh",
+  title: "I Wanna Be Yours (Violin)",
+  artist: "Dramatic Violin",
+  album: "I Wanna Be Yours (Violin)",
+  duration: "2:01", // 121 seconds
+  poster: "https://c.saavncdn.com/915/I-Wanna-Be-Yours-Violin-Unknown-2023-20250108075659-500x500.jpg",
+  audioUrl: "https://aac.saavncdn.com/915/ac73938eb6ed3d2dffa1b88e7eacc34d_320.mp4",
+  colors: {
+    primary: "#1a1a1a",
+    secondary: "#2d2d2d",
+    accent: "#6a1b9a"
   }
+},
+
 ];
 
 
