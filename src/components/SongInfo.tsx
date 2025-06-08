@@ -19,9 +19,9 @@ export const SongInfo: React.FC<Props> = ({
   onToggleLyrics, 
   onToggleSearch 
 }) => (
-<div className="flex flex-col justify-center space-y-1 text-left min-w-0 flex-shrink-0 md:pl-7">
+<div className="flex flex-col justify-center space-y-0 text-left min-w-0 flex-shrink-0 md:pl-7">
     
-<div  className="overflow-hidden relative w-full h-12 transition-all duration-300" 
+<div  className="overflow-hidden relative w-full  h-8 md:h-12 transition-all duration-300" 
  style={{
     minWidth: title.length > 28 ? `${Math.min(title.length * 25, 600)}px` : '500px',
     maxWidth: '100%',
@@ -31,7 +31,7 @@ export const SongInfo: React.FC<Props> = ({
   <div
     className={`${
       title.length > 28 ? "absolute animate-marquee" : "relative"
-    } whitespace-nowrap text-white font-bold leading-tight text-3xl md:text-4xl transition-all duration-300`}
+    } whitespace-nowrap text-white font-bold leading-tight text-2xl md:text-4xl transition-all duration-300`}
     style={
       title.length > 28
         ? { animationDuration: `${title.length / 4}s` }
@@ -43,7 +43,7 @@ export const SongInfo: React.FC<Props> = ({
 </div>
 
 
-    <p className="text-2xl md:text-1xl text-gray-300">{artist}</p>
+    <p className="text-1xl md:text-1xl text-gray-300">{artist}</p>
     {/* <p className="text-xl text-gray-400">{album}</p> */}
 
     <div className="flex space-x-4 mt-8">

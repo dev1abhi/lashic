@@ -163,12 +163,17 @@ export const MusicPlayer = () => {
       <div style={{ position: 'relative', zIndex: 2 }}>  
       
       {/* Vinyl + All Details  */}
-      <div className="h-screen overflow-hidden p-4 md:p-8 relative z-10">
+      {/* <div className="h-screen overflow-hidden p-4 md:p-8 relative z-10"> */}
+      <div className="overflow-hidden p-4 md:p-8 relative z-10" style={{ height: '100dvh' }}>
 
         
     <div className="max-w-7xl mx-auto h-full flex flex-col justify-center">
      <div className="flex flex-col md:flex-row items-center justify-center space-y-10 md:space-y-0 md:space-x-16 flex-1">
 
+
+   <div className="flex-shrink-0 md:hidden">
+      <Vinyl poster={currentSong.poster} title={currentSong.title} isPlaying={isPlaying} />
+    </div>
    
 
     {/* Details stack below on mobile, right on desktop */}
@@ -218,7 +223,7 @@ export const MusicPlayer = () => {
     </div>
 
  {/* Vinyl at top on mobile, left on desktop */}
-    <div className="flex-shrink-0">
+    <div className="flex-shrink-0 hidden md:block">
       <Vinyl poster={currentSong.poster} title={currentSong.title} isPlaying={isPlaying} />
     </div>
 
