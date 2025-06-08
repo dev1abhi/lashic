@@ -4,6 +4,7 @@ interface AudioPlayerProps {
   audioUrl?: string;
   isPlaying: boolean;
   volume: number;
+  currentTime?: number; // in seconds
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   onEnded?: () => void;
   onLoadStart?: () => void;
@@ -15,34 +16,68 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   audioUrl,
   isPlaying,
   volume,
+  currentTime,
   onTimeUpdate,
   onEnded,
   onLoadStart,
   onCanPlay,
   onError
 }) => {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Handle play/pause
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isReady, setIsReady] = useState(false);
+
+// Update currentTime in audio element when it changes
+    useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || currentTime === undefined || isNaN(currentTime)) return;
+
+    if (Math.abs(audio.currentTime - currentTime) > 0.5) {
+      audio.currentTime = currentTime;
+    }
+  }, [currentTime]);
+
+  // Load new audio URL
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !audioUrl) return;
+    if (!audio) return;
 
-    if (isPlaying) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error('Error playing audio:', error);
-          onError?.('Failed to play audio');
-        });
-      }
+    if (audioUrl) {
+      setIsReady(false);
+      audio.src = audioUrl;
+      audio.load();
+      onLoadStart?.();
     } else {
       audio.pause();
+      setIsReady(false);
     }
-  }, [isPlaying, audioUrl, onError]);
+  }, [audioUrl, onLoadStart]);
 
-  // Handle volume changes
+
+  useEffect(() => {
+  const audio = audioRef.current;
+  if (!audio) return;
+
+  if (!isReady) return; // let handleCanPlay do the play()
+
+  if (isPlaying) {
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((error) => {
+        // Only log non-Abort errors
+        if (error.name !== 'AbortError') {
+          console.error('Error playing audio:', error);
+          onError?.('Failed to play audio');
+        }
+      });
+    }
+  } else {
+    audio.pause();
+  }
+}, [isPlaying, isReady, onError]);
+
+  // Update volume
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -50,37 +85,38 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   }, [volume]);
 
-  // Handle audio URL changes
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+  // When audio can play, mark ready and call onCanPlay
+  const handleCanPlay = () => {
+  setIsReady(true);
+  //console.log(isPlaying, audioRef.current?.currentTime);
 
-    if (audioUrl) {
-      setIsLoading(true);
-      audio.src = audioUrl;
-      audio.load();
-    }
-  }, [audioUrl]);
+  if (isPlaying) {
+    audioRef.current?.play().catch((error) => {
+      if (error.name !== 'AbortError') {
+        console.error("Error playing audio:", error);
+        onError?.("Failed to play audio");
+      }
+    });
+  }
+
+  onCanPlay?.();
+};
 
   const handleTimeUpdate = () => {
     const audio = audioRef.current;
     if (audio && onTimeUpdate) {
+      if (!isFinite(audio.currentTime) || !isFinite(audio.duration)) return;
       onTimeUpdate(audio.currentTime, audio.duration || 0);
     }
   };
 
-  const handleLoadStart = () => {
-    setIsLoading(true);
-    onLoadStart?.();
-  };
 
-  const handleCanPlay = () => {
-    setIsLoading(false);
-    onCanPlay?.();
+  const handleEnded = () => {
+    onEnded?.();
   };
 
   const handleError = () => {
-    setIsLoading(false);
+    setIsReady(false);
     onError?.('Failed to load audio');
   };
 
@@ -88,8 +124,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     <audio
       ref={audioRef}
       onTimeUpdate={handleTimeUpdate}
-      onEnded={onEnded}
-      onLoadStart={handleLoadStart}
+      onEnded={handleEnded}
       onCanPlay={handleCanPlay}
       onError={handleError}
       preload="metadata"

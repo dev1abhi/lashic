@@ -21,14 +21,17 @@ export const Controls: React.FC<Props> = ({
   isPlaying,
   currentTime,
   duration,
-  volume,
   progress,
   onPlayToggle,
   onPrev,
   onNext,
   onTimeChange,
-  onVolumeChange,
 }) => {
+
+
+
+
+
   const formatTime = (seconds: number): string => {
     if (!seconds || isNaN(seconds)) return '0:00';
     const mins = Math.floor(seconds / 60);
@@ -41,9 +44,12 @@ export const Controls: React.FC<Props> = ({
       {/* Main Controls */}
       <div className="flex flex-col items-center justify-center space-y-6 w-full">
         <div className="flex items-center justify-center space-x-6">
+
+          {/* shuffling */}
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
             <Shuffle className="w-5 h-5" />
           </Button>
+
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={onPrev}>
             <SkipBack className="w-6 h-6" />
           </Button>
@@ -58,6 +64,8 @@ export const Controls: React.FC<Props> = ({
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={onNext}>
             <SkipForward className="w-6 h-6" />
           </Button>
+
+          {/* repeating a song */}
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
             <Repeat className="w-5 h-5" />
           </Button>
@@ -70,6 +78,7 @@ export const Controls: React.FC<Props> = ({
             onChange={(value) => onTimeChange(value)} 
             isPlaying={isPlaying}
           />
+
           <div className="flex justify-between text-sm text-gray-400">
             <span>{formatTime(currentTime)}</span>
             <span>{duration}</span>

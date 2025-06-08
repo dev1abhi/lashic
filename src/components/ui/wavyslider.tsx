@@ -56,8 +56,10 @@ export const WavySlider: React.FC<WavySliderProps> = ({
     return `${x},${y}`;
   }).join(" L ");
 
-  const posX = (value / 100) * width;
-  const posY = height / 2 + amplitude * Math.sin(posX * frequency + phase);
+const normalizedValue = Number.isFinite(value) ? value : 0;
+const posX = (normalizedValue / 100) * width;
+const rawPosY = height / 2 + amplitude * Math.sin(posX * frequency + phase);
+const posY = Number.isFinite(rawPosY) ? rawPosY : height / 2;
 
   // Drag handling
   const handleMouseDown = () => {

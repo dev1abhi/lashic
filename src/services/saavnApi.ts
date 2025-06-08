@@ -1,6 +1,6 @@
 import { SaavnSearchResponse, SaavnSong, Song } from '@/components/types';
 
-const SAAVN_API_BASE = 'https://saavn.dev/api';
+const SAAVN_API_BASE = 'https://jiosavan-api2.vercel.app/api';
 
 export class SaavnApiService {
   static async searchSongs(query: string): Promise<Song[]> {
