@@ -168,7 +168,9 @@ export const MusicPlayer = () => {
 
         
     <div className="max-w-7xl mx-auto h-full flex flex-col justify-center">
-     <div className="flex flex-col md:flex-row items-center justify-center space-y-10 md:space-y-0 md:space-x-16 flex-1">
+
+      {/* md re different margin --> y-0 */}
+     <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-y-0 md:space-x-16 flex-1">
 
 
    <div className="flex-shrink-0 md:hidden">
@@ -177,7 +179,8 @@ export const MusicPlayer = () => {
    
 
     {/* Details stack below on mobile, right on desktop */}
-    <div className="flex flex-col md:flex-row space-y-6 md:space-y-0 md:space-x-10 w-full max-w-xl mx-auto">
+    <div className="flex flex-col md:flex-row  md:space-y-0 md:space-x-10 w-full max-w-xl mx-auto">
+
       {/* Volume + Info + Controls */}
       <div className="flex md:flex-row items-center md:items-start space-y-6 md:space-y-10 w-full max-w-full px-2">
 
