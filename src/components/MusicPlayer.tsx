@@ -6,11 +6,13 @@ import { Vinyl } from './Vinyl';
 import { PlaylistSidebar } from './PlaylistsSidebar';
 import { LyricsSidebar } from './LyricsSidebar';
 import { SearchModal } from './SearchModal';
+import { AudioPlayer } from './AudioPlayer';
 import { Slider } from './ui/slider';
+import { toast } from '@/components/ui/sonner';
 
 const sampleSongs: Song[] = [
   {
-    id: 1,
+    id: "1",
     title: "Midnight Dreams", 
     artist: "Luna Eclipse",
     album: "Stellar Nights",
@@ -19,7 +21,7 @@ const sampleSongs: Song[] = [
     colors: { primary: "#1a1a2e", secondary: "#16213e", accent: "#533483" }
   },
   {
-    id: 2,
+    id: "2",
     title: "Golden Hour",
     artist: "Solar Flare",
     album: "Sunrise Sessions",
@@ -28,7 +30,7 @@ const sampleSongs: Song[] = [
     colors: { primary: "#2c1810", secondary: "#3d2817", accent: "#8b4513" }
   },
   {
-    id: 3,
+    id: "3",
     title: "Ocean Waves",
     artist: "Aqua Harmony",
     album: "Deep Blue",
@@ -121,20 +123,20 @@ export const MusicPlayer = () => {
   const [currentSong, setCurrentSong] = useState(sampleSongs[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(70);
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [extractedColors, setExtractedColors] = useState(currentSong.colors);
+  const [playlist, setPlaylist] = useState<Song[]>(sampleSongs);
 
   useEffect(() => {
     extractColorsFromImage(currentSong.poster).then((colors) => {
       setExtractedColors(colors);
-      //this is setting the color of background and theme colors
       document.documentElement.style.setProperty('--theme-primary', colors.primary);
       document.documentElement.style.setProperty('--theme-secondary', colors.secondary);
       document.documentElement.style.setProperty('--theme-accent', colors.accent);
-      //document.body.style.background = `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 50%, ${colors.accent} 100%)`;
     });
   }, [currentSong]);
 
@@ -152,24 +154,68 @@ export const MusicPlayer = () => {
   }, []);
 
   const nextSong = () => {
-    const currentIndex = sampleSongs.findIndex(song => song.id === currentSong.id);
-    const nextIndex = (currentIndex + 1) % sampleSongs.length;
-    setCurrentSong(sampleSongs[nextIndex]);
+    const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
+    const nextIndex = (currentIndex + 1) % playlist.length;
+    setCurrentSong(playlist[nextIndex]);
   };
 
   const prevSong = () => {
-    const currentIndex = sampleSongs.findIndex(song => song.id === currentSong.id);
-    const prevIndex = currentIndex === 0 ? sampleSongs.length - 1 : currentIndex - 1;
-    setCurrentSong(sampleSongs[prevIndex]);
+    const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
+    const prevIndex = currentIndex === 0 ? playlist.length - 1 : currentIndex - 1;
+    setCurrentSong(playlist[prevIndex]);
   };
 
   const handleSelectSong = (song: Song) => {
     setCurrentSong(song);
     setIsPlaying(true);
+    
+    // Add to playlist if not already there
+    if (!playlist.find(s => s.id === song.id)) {
+      setPlaylist(prev => [...prev, song]);
+    }
+
+    toast.success(`Now playing: ${song.title} by ${song.artist}`);
+  };
+
+  const handleTimeUpdate = (current: number, total: number) => {
+    setCurrentTime(current);
+    setDuration(total);
+  };
+
+  const handleSeek = (value: number) => {
+    // This would need to be implemented in the AudioPlayer component
+    // For now, we'll just update the visual progress
+    setCurrentTime((value / 100) * duration);
+  };
+
+  const formatTime = (seconds: number): string => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleAudioError = (error: string) => {
+    toast.error(`Audio Error: ${error}`);
+    setIsPlaying(false);
+  };
+
+  const handleAudioEnded = () => {
+    nextSong();
   };
 
   return (
     <>
+      {/* Audio Player Component */}
+      <AudioPlayer
+        audioUrl={currentSong.audioUrl}
+        isPlaying={isPlaying}
+        volume={volume}
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={handleAudioEnded}
+        onError={handleAudioError}
+      />
+
       {/* Animated flowing colored background */}
       <BackgroundFlow colors={extractedColors} isPlaying={isPlaying} />
 
@@ -194,7 +240,6 @@ export const MusicPlayer = () => {
       <div className="flex md:flex-row items-center md:items-start space-y-6 md:space-y-10 w-full max-w-full px-2">
 
         {/* Volume Slider (visible only on md and above or reposition for mobile) */}
-        {/* update px-8 to remove the space between volume slider and details */}
         <div className="hidden sm:flex w-full px-3 mt-4">
           <div className="h-[300px] w-9 rounded-full bg-black/10 flex items-center justify-center p-2 mt-10">
             <Slider
@@ -219,19 +264,17 @@ export const MusicPlayer = () => {
             onToggleSearch={() => setShowSearch((prev) => !prev)}
           />
 
-          {/* <div className="py-0.5">
-          </div> */}
-
           <Controls
             isPlaying={isPlaying}
             onPlayToggle={() => setIsPlaying(!isPlaying)}
             currentTime={currentTime}
-            onTimeChange={setCurrentTime}
-            duration={currentSong.duration}
+            duration={formatTime(duration)}
+            onTimeChange={handleSeek}
             volume={volume}
             onVolumeChange={setVolume}
             onPrev={prevSong}
             onNext={nextSong}
+            progress={(currentTime / duration) * 100 || 0}
           />
         </div>
       </div>
@@ -250,7 +293,7 @@ export const MusicPlayer = () => {
 
         <PlaylistSidebar
           visible={showPlaylist}
-          songs={sampleSongs}
+          songs={playlist}
           currentSongId={currentSong.id}
           onClose={() => setShowPlaylist(false)}
           onSelectSong={handleSelectSong}
@@ -264,7 +307,6 @@ export const MusicPlayer = () => {
         <SearchModal
           visible={showSearch}
           onClose={() => setShowSearch(false)}
-          songs={sampleSongs}
           onSelectSong={handleSelectSong}
         />
 

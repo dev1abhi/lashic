@@ -1,33 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Search } from 'lucide-react';
+import { X, Search, Loader2 } from 'lucide-react';
 import { Song } from './types';
+import { SaavnApiService } from '@/services/saavnApi';
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  songs: Song[];
   onSelectSong: (song: Song) => void;
 }
 
-export const SearchModal: React.FC<Props> = ({ visible, onClose, songs, onSelectSong }) => {
+export const SearchModal: React.FC<Props> = ({ visible, onClose, onSelectSong }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Song[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Filter songs based on search query
-  const filteredSongs = songs.filter(song =>
-    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    song.album.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Reset search and selection when modal opens
   useEffect(() => {
     if (visible) {
       setSearchQuery('');
+      setSearchResults([]);
       setSelectedIndex(0);
+      setIsLoading(false);
       // Focus input after a brief delay to ensure modal is rendered
       setTimeout(() => {
         inputRef.current?.focus();
@@ -37,10 +35,43 @@ export const SearchModal: React.FC<Props> = ({ visible, onClose, songs, onSelect
 
   // Update selected index when filtered results change
   useEffect(() => {
-    if (selectedIndex >= filteredSongs.length) {
-      setSelectedIndex(Math.max(0, filteredSongs.length - 1));
+    if (selectedIndex >= searchResults.length) {
+      setSelectedIndex(Math.max(0, searchResults.length - 1));
     }
-  }, [filteredSongs.length, selectedIndex]);
+  }, [searchResults.length, selectedIndex]);
+
+  // Debounced search
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (searchQuery.trim().length < 2) {
+      setSearchResults([]);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const results = await SaavnApiService.searchSongs(searchQuery.trim());
+        setSearchResults(results);
+        setSelectedIndex(0);
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 500);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -53,7 +84,7 @@ export const SearchModal: React.FC<Props> = ({ visible, onClose, songs, onSelect
           break;
         case 'ArrowDown':
           e.preventDefault();
-          setSelectedIndex(prev => Math.min(prev + 1, filteredSongs.length - 1));
+          setSelectedIndex(prev => Math.min(prev + 1, searchResults.length - 1));
           break;
         case 'ArrowUp':
           e.preventDefault();
@@ -61,8 +92,8 @@ export const SearchModal: React.FC<Props> = ({ visible, onClose, songs, onSelect
           break;
         case 'Enter':
           e.preventDefault();
-          if (filteredSongs[selectedIndex]) {
-            onSelectSong(filteredSongs[selectedIndex]);
+          if (searchResults[selectedIndex]) {
+            onSelectSong(searchResults[selectedIndex]);
             onClose();
           }
           break;
@@ -71,7 +102,7 @@ export const SearchModal: React.FC<Props> = ({ visible, onClose, songs, onSelect
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [visible, selectedIndex, filteredSongs, onSelectSong, onClose]);
+  }, [visible, selectedIndex, searchResults, onSelectSong, onClose]);
 
   if (!visible) return null;
 
@@ -105,22 +136,34 @@ export const SearchModal: React.FC<Props> = ({ visible, onClose, songs, onSelect
             <Input
               ref={inputRef}
               type="text"
-              placeholder="Search by title, artist, or album..."
+              placeholder="Search for songs, artists, or albums..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20"
             />
+            {isLoading && (
+              <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 animate-spin" />
+            )}
           </div>
 
           {/* Results */}
           <div className="flex-1 overflow-y-auto">
-            {filteredSongs.length === 0 ? (
+            {searchQuery.trim().length < 2 ? (
               <div className="text-center py-8 text-gray-400">
-                {searchQuery ? 'No songs found' : 'Start typing to search...'}
+                Start typing to search for songs...
+              </div>
+            ) : isLoading ? (
+              <div className="text-center py-8 text-gray-400">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+                Searching...
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                No songs found for "{searchQuery}"
               </div>
             ) : (
               <div className="space-y-2">
-                {filteredSongs.map((song, index) => (
+                {searchResults.map((song, index) => (
                   <div
                     key={song.id}
                     onClick={() => {
@@ -138,6 +181,10 @@ export const SearchModal: React.FC<Props> = ({ visible, onClose, songs, onSelect
                         src={song.poster} 
                         alt={song.title} 
                         className="w-12 h-12 rounded-lg object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop';
+                        }}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-white font-medium truncate">{song.title}</p>
@@ -153,10 +200,10 @@ export const SearchModal: React.FC<Props> = ({ visible, onClose, songs, onSelect
           </div>
 
           {/* Footer */}
-          {filteredSongs.length > 0 && (
+          {searchResults.length > 0 && (
             <div className="mt-4 pt-4 border-t border-white/20">
               <div className="flex items-center justify-between text-sm text-gray-400">
-                <span>{filteredSongs.length} song{filteredSongs.length !== 1 ? 's' : ''} found</span>
+                <span>{searchResults.length} song{searchResults.length !== 1 ? 's' : ''} found</span>
                 <div className="flex items-center space-x-4">
                   <span>↑↓ Navigate</span>
                   <span>↵ Select</span>

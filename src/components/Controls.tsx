@@ -1,9 +1,7 @@
-// Controls.tsx
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
-import { ProgressSlider } from './ui/progressSlider';
 import WavySlider from './ui/wavyslider';
 
 interface Props {
@@ -11,6 +9,7 @@ interface Props {
   currentTime: number;
   duration: string;
   volume: number;
+  progress: number;
   onPlayToggle: () => void;
   onPrev: () => void;
   onNext: () => void;
@@ -23,15 +22,19 @@ export const Controls: React.FC<Props> = ({
   currentTime,
   duration,
   volume,
+  progress,
   onPlayToggle,
   onPrev,
   onNext,
   onTimeChange,
   onVolumeChange,
 }) => {
-
-    
-const [progress, setProgress] = React.useState<number>(0);
+  const formatTime = (seconds: number): string => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <div className="relative flex items-center justify-center w-full">
@@ -62,9 +65,13 @@ const [progress, setProgress] = React.useState<number>(0);
 
         {/* Timeline Slider */}
         <div className="w-full max-w-md mx-auto">
-          <WavySlider value={progress} onChange={setProgress} isPlaying={isPlaying}/>
+          <WavySlider 
+            value={progress} 
+            onChange={(value) => onTimeChange(value)} 
+            isPlaying={isPlaying}
+          />
           <div className="flex justify-between text-sm text-gray-400">
-            <span>0:00</span>
+            <span>{formatTime(currentTime)}</span>
             <span>{duration}</span>
           </div>
         </div>

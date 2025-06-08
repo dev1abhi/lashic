@@ -1,4 +1,3 @@
-// PlaylistSidebar.tsx
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
@@ -7,7 +6,7 @@ import { Song } from './types';
 interface Props {
   visible: boolean;
   songs: Song[];
-  currentSongId: number;
+  currentSongId: string;
   onClose: () => void;
   onSelectSong: (song: Song) => void;
 }
@@ -33,7 +32,15 @@ export const PlaylistSidebar: React.FC<Props> = ({ visible, songs, currentSongId
             }`}
           >
             <div className="flex items-center space-x-3">
-              <img src={song.poster} alt={song.title} className="w-12 h-12 rounded-lg object-cover" />
+              <img 
+                src={song.poster} 
+                alt={song.title} 
+                className="w-12 h-12 rounded-lg object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop';
+                }}
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-white font-medium truncate">{song.title}</p>
                 <p className="text-gray-300 text-sm truncate">{song.artist}</p>
