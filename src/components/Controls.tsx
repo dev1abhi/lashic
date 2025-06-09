@@ -15,6 +15,8 @@ interface Props {
   onNext: () => void;
   onTimeChange: (val: number) => void;
   onVolumeChange: (val: number) => void;
+  isRepeat: boolean;
+  onToggleRepeat: () => void;
 }
 
 export const Controls: React.FC<Props> = ({
@@ -26,6 +28,8 @@ export const Controls: React.FC<Props> = ({
   onPrev,
   onNext,
   onTimeChange,
+  isRepeat,
+  onToggleRepeat,
 }) => {
 
 
@@ -66,9 +70,15 @@ export const Controls: React.FC<Props> = ({
           </Button>
 
           {/* repeating a song */}
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
-            <Repeat className="w-5 h-5" />
-          </Button>
+          <Button
+           variant="ghost"
+           size="icon"
+           className={`hover:bg-white/10 ${isRepeat ? 'text-green-400' : 'text-white'}`}
+           onClick={onToggleRepeat}
+          >
+         <Repeat className="w-5 h-5" />
+         </Button>
+         
         </div>
 
         {/* Timeline Slider */}

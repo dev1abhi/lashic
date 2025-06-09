@@ -64,6 +64,7 @@ export const MusicPlayer = () => {
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [isRepeat, setIsRepeat] = useState(false);
 
   //called the getLikedSongs function to get the liked songs from local storage
   const [playlist, setPlaylist] = useState<Song[]>(getLikedSongs());
@@ -77,14 +78,14 @@ export const MusicPlayer = () => {
 
 
 //if currentSong is null/defaultSong and playlist has songs, set the first song as currentSong
-// breaks when 1 song and 2 song then violin
-//solution: currentSong.id === playlist[0].id
-//playlist only getting changed once when the component mounts
+// this is working becoz current song object not equal to default song object after first fetch
 useEffect(() => {
   if (currentSong===defaultSong && playlist.length > 0) {
     setCurrentSong(playlist[0]);
   }
-}, [playlist]);
+}, [playlist , currentSong, defaultSong]);
+
+
 
 
 //extract colors from the current song's poster when it changes
@@ -158,10 +159,20 @@ useEffect(() => {
     setIsPlaying(false);
   };
 
-  //when song ends
+ 
+  
   const handleAudioEnded = () => {
-    nextSong();
-  };
+  if (isRepeat) {
+    setCurrentTime(0); // Go back to beginning
+    setIsPlaying(true); // Restart the song
+  } else if (playlist.length <= 1) {
+    // If there's no next song (only current or empty)
+    setCurrentTime(0); // Reset song time
+    setIsPlaying(false); // Optionally pause
+  } else {
+    nextSong(); // Go to next song in the playlist
+  }
+};
 
 // Function to check if a song is liked
   const handleLikeToggle = () => {
@@ -259,6 +270,8 @@ useEffect(() => {
             onPrev={prevSong}
             onNext={nextSong}
             progress={progress || 0}
+            isRepeat={isRepeat}
+            onToggleRepeat={() => setIsRepeat(prev => !prev)}
           />
         </div>
       </div>
