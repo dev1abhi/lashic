@@ -66,12 +66,10 @@ export const MusicPlayer = () => {
   const [showLyrics, setShowLyrics] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [extractedColors, setExtractedColors] = useState(currentSong.colors);
-  //const [playlist, setPlaylist] = useState<Song[]>(sampleSongs);
   const [progress, setProgress] = useState(0);
-
   const [playlist, setPlaylist] = useState<Song[]>(getLikedSongs());
 
-
+//extract colors from the current song's poster when it changes
   useEffect(() => {
   extractColorsFromImage(currentSong.poster).then((colors) => {
     setExtractedColors(colors);
@@ -110,11 +108,6 @@ export const MusicPlayer = () => {
     setCurrentSong(song);
     setIsPlaying(true);
     
-    // automatically adds songs which are played to the playlist
-    // Add to playlist if not already there
-    // if (!playlist.find(s => s.id === song.id)) {
-    //   setPlaylist(prev => [...prev, song]);
-    // }
 
     toast.success(`Now playing: ${song.title} by ${song.artist}`);
   };
@@ -209,7 +202,7 @@ export const MusicPlayer = () => {
       <div className="flex md:flex-row items-center md:items-start space-y-6 md:space-y-10 w-full max-w-full px-2">
 
         {/* Volume Slider (visible only on md and above or reposition for mobile) */}
-        <div className="hidden sm:flex w-full px-3 mt-4">
+        <div className="hidden sm:flex w-full px-3 mt-1">
           <div className="h-[300px] w-9 rounded-full bg-black/10 flex items-center justify-center p-2 mt-10">
             <Slider
               orientation="vertical"
