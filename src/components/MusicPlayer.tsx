@@ -35,7 +35,6 @@ const sampleSongs: Song[] = [
     accent: "#6a1b9a"
   }
 },
-
 ];
 
 
@@ -57,7 +56,7 @@ const BackgroundFlow: React.FC<{ colors: { primary: string; secondary: string; a
 };
 
 export const MusicPlayer = () => {
-  const [currentSong, setCurrentSong] = useState(sampleSongs[0]);
+ 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -65,18 +64,39 @@ export const MusicPlayer = () => {
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [extractedColors, setExtractedColors] = useState(currentSong.colors);
-  const [progress, setProgress] = useState(0);
+
+  //called the getLikedSongs function to get the liked songs from local storage
   const [playlist, setPlaylist] = useState<Song[]>(getLikedSongs());
+
+  const [extractedColors, setExtractedColors] = useState(
+    sampleSongs[0].colors // fallback to sample song colors
+  );
+  const [progress, setProgress] = useState(0);
+  const [currentSong, setCurrentSong] = useState(sampleSongs[0]);
+  const defaultSong = sampleSongs[0];
+
+
+//if currentSong is null/defaultSong and playlist has songs, set the first song as currentSong
+// breaks when 1 song and 2 song then violin
+//solution: currentSong.id === playlist[0].id
+//playlist only getting changed once when the component mounts
+useEffect(() => {
+  if (currentSong===defaultSong && playlist.length > 0) {
+    setCurrentSong(playlist[0]);
+  }
+}, [playlist]);
+
 
 //extract colors from the current song's poster when it changes
   useEffect(() => {
-  extractColorsFromImage(currentSong.poster).then((colors) => {
-    setExtractedColors(colors);
-    document.documentElement.style.setProperty('--theme-primary', colors.primary);
-    document.documentElement.style.setProperty('--theme-secondary', colors.secondary);
-    document.documentElement.style.setProperty('--theme-accent', colors.accent);
-  });
+  if (currentSong) {
+    extractColorsFromImage(currentSong.poster).then((colors) => {
+      setExtractedColors(colors);
+      document.documentElement.style.setProperty('--theme-primary', colors.primary);
+      document.documentElement.style.setProperty('--theme-secondary', colors.secondary);
+      document.documentElement.style.setProperty('--theme-accent', colors.accent);
+    });
+  }
 }, [currentSong]);
 
   // Global keyboard shortcut for search

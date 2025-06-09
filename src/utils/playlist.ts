@@ -4,21 +4,23 @@ import { Song } from '../components/types';
 
 const STORAGE_KEY = 'likedSongs';
 
-
+//set a default song
 const defaultSong: Song = {
-  id: 'default-1',
-  title: 'Default Song',
-  artist: 'Unknown Artist',
-  album: 'Unknown Album',
-  duration: '3:30',
-  poster: 'https://via.placeholder.com/150',
-  audioUrl: '', // optional: a real working audio URL
+  id: "JkNTq6Kh",
+  title: "I Wanna Be Yours (Violin)",
+  artist: "Dramatic Violin",
+  album: "I Wanna Be Yours (Violin)",
+  duration: "2:01", // 121 seconds
+  poster: "https://c.saavncdn.com/915/I-Wanna-Be-Yours-Violin-Unknown-2023-20250108075659-500x500.jpg",
+  audioUrl: "https://aac.saavncdn.com/915/ac73938eb6ed3d2dffa1b88e7eacc34d_320.mp4",
   colors: {
-    primary: '#000000',
-    secondary: '#444444',
-    accent: '#ffffff',
-  },
+    primary: "#1a1a1a",
+    secondary: "#2d2d2d",
+    accent: "#6a1b9a"
+  }
 };
+
+
 
 export function getLikedSongs(): Song[] {
   const data = localStorage.getItem(STORAGE_KEY);
@@ -45,12 +47,10 @@ export function addLikedSong(song: Song) {
   }
 }
 
+
 export function removeLikedSong(songId: string) {
-   const filtered = getLikedSongs().filter((s) => s.id !== songId);
-  // Ensure there's at least one song left
-  if (filtered.length === 0) {
-    saveLikedSongs([defaultSong]);
-  } else {
-    saveLikedSongs(filtered);
-  }
+  const songs = getLikedSongs().filter((s) => s.id !== songId);
+  saveLikedSongs(songs);
 }
+
+
