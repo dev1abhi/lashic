@@ -113,17 +113,21 @@ useEffect(() => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const nextSong = () => {
-    const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
-    const nextIndex = (currentIndex + 1) % playlist.length;
-    setCurrentSong(playlist[nextIndex]);
-  };
+ const nextSong = () => {
+  if (!playlist.length || !currentSong) return;
 
-  const prevSong = () => {
-    const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
-    const prevIndex = currentIndex === 0 ? playlist.length - 1 : currentIndex - 1;
-    setCurrentSong(playlist[prevIndex]);
-  };
+  const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
+  const nextIndex = (currentIndex + 1) % playlist.length;
+  setCurrentSong(playlist[nextIndex]);
+};
+
+const prevSong = () => {
+  if (!playlist.length || !currentSong) return;
+
+  const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
+  const prevIndex = currentIndex === 0 ? playlist.length - 1 : currentIndex - 1;
+  setCurrentSong(playlist[prevIndex]);
+};
 
   const handleSelectSong = (song: Song) => {
     setCurrentSong(song);
