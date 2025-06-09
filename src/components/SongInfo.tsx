@@ -1,23 +1,29 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { List, FileText, Search } from 'lucide-react';
+import { List, FileText, Search, Heart } from 'lucide-react';
+import { cn } from '@/lib/utils'; // optional utility for conditional classes
 
 interface Props {
   title: string;
   artist: string;
   album: string;
+  isLiked: boolean;
   onTogglePlaylist: () => void;
   onToggleLyrics: () => void;
   onToggleSearch: () => void;
+  onToggleLike: () => void;
+
 }
 
 export const SongInfo: React.FC<Props> = ({ 
   title, 
   artist, 
   album, 
+  isLiked,
   onTogglePlaylist, 
   onToggleLyrics, 
-  onToggleSearch 
+  onToggleSearch, 
+  onToggleLike 
 }) => (
 <div className="flex flex-col justify-center space-y-0 text-left min-w-0 flex-shrink-0 md:pl-7">
     
@@ -59,6 +65,22 @@ export const SongInfo: React.FC<Props> = ({
         <Search className="w-5 h-5" />
         <span>Search</span>
       </Button>
+
+
+
+       {/* ❤️ Like button */}
+      <Button
+        variant="ghost"
+        onClick={onToggleLike}
+        className={cn(
+          'text-white flex items-center space-x-2 hover:bg-white/10',
+          isLiked ? 'text-pink-400' : 'text-white'
+        )}
+      >
+        <Heart className="w-5 h-5 fill-current" fill={isLiked ? 'currentColor' : 'none'} />
+        <span>{isLiked ? 'Liked' : 'Like'}</span>
+      </Button>
+      
     </div>
   </div>
 );

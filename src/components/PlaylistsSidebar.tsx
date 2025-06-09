@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X , MinusCircle } from 'lucide-react';
 import { Song } from './types';
 
 interface Props {
@@ -9,9 +9,10 @@ interface Props {
   currentSongId: string;
   onClose: () => void;
   onSelectSong: (song: Song) => void;
+  onDeleteSong: (id: string) => void;
 }
 
-export const PlaylistSidebar: React.FC<Props> = ({ visible, songs, currentSongId, onClose, onSelectSong }) => (
+export const PlaylistSidebar: React.FC<Props> = ({ visible, songs, currentSongId, onClose, onSelectSong, onDeleteSong }) => (
   <div className={`fixed top-0 left-0 h-full w-80 glass-strong z-50 transform transition-transform duration-300 ${
     visible ? 'translate-x-0' : '-translate-x-full'
   }`}>
@@ -46,6 +47,12 @@ export const PlaylistSidebar: React.FC<Props> = ({ visible, songs, currentSongId
                 <p className="text-gray-300 text-sm truncate">{song.artist}</p>
               </div>
               <span className="text-gray-400 text-xs">{song.duration}</span>
+              <Button variant="ghost" size="icon" onClick={(e) => {
+                e.stopPropagation();
+                 onDeleteSong(song.id);
+                }}>
+               <MinusCircle className="w-4 h-4 text-red-400" />
+               </Button>
             </div>
           </div>
         ))}

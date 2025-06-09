@@ -12,6 +12,14 @@ import { toast } from '@/components/ui/sonner';
 import { extractColorsFromImage } from '../utils/colorUtils';
 
 
+import {
+  getLikedSongs,
+  isSongLiked,
+  addLikedSong,
+  removeLikedSong,
+} from '../utils/playlist';
+
+
 const sampleSongs: Song[] = [
    {
   id: "JkNTq6Kh",
@@ -58,8 +66,10 @@ export const MusicPlayer = () => {
   const [showLyrics, setShowLyrics] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [extractedColors, setExtractedColors] = useState(currentSong.colors);
-  const [playlist, setPlaylist] = useState<Song[]>(sampleSongs);
+  //const [playlist, setPlaylist] = useState<Song[]>(sampleSongs);
   const [progress, setProgress] = useState(0);
+
+  const [playlist, setPlaylist] = useState<Song[]>(getLikedSongs());
 
 
   useEffect(() => {
@@ -100,22 +110,23 @@ export const MusicPlayer = () => {
     setCurrentSong(song);
     setIsPlaying(true);
     
+    // automatically adds songs which are played to the playlist
     // Add to playlist if not already there
-    if (!playlist.find(s => s.id === song.id)) {
-      setPlaylist(prev => [...prev, song]);
-    }
+    // if (!playlist.find(s => s.id === song.id)) {
+    //   setPlaylist(prev => [...prev, song]);
+    // }
 
     toast.success(`Now playing: ${song.title} by ${song.artist}`);
   };
 
- //changes current time and duration when updated in AudioPlayer. this recieves values from AudioPlayer.
+ //changes current time and duration when updated in AudioPlayer. this recieves values from AudioPlayer when a new song is played.
   const handleTimeUpdate = (current: number, total: number) => {
     setCurrentTime(current);
     setDuration(total);
     setProgress((currentTime / total) * 100);
   };
 
-//recieves value from Controls and sets progress and current time
+//recieves value from Controls and sets progress and current time, when the user interacts with the progress bar
   const onTimeChange = (value: number) => {
   setProgress(value);
   setCurrentTime((value / 100) * duration);
@@ -138,6 +149,19 @@ export const MusicPlayer = () => {
   const handleAudioEnded = () => {
     nextSong();
   };
+
+// Function to check if a song is liked
+  const handleLikeToggle = () => {
+  if (!currentSong) return;
+  const liked = isSongLiked(currentSong);
+  if (liked) {
+    removeLikedSong(currentSong.id);
+    setPlaylist((prev) => prev.filter((s) => s.id !== currentSong.id));
+  } else {
+    addLikedSong(currentSong);
+    setPlaylist((prev) => [...prev, currentSong]);
+  }
+};
 
   return (
     <>
@@ -207,6 +231,8 @@ export const MusicPlayer = () => {
             onTogglePlaylist={() => setShowPlaylist((prev) => !prev)}
             onToggleLyrics={() => setShowLyrics((prev) => !prev)}
             onToggleSearch={() => setShowSearch((prev) => !prev)}
+            onToggleLike ={handleLikeToggle}
+            isLiked={playlist.some(s => s.id === currentSong.id)}
           />
 
           <Controls
@@ -242,6 +268,10 @@ export const MusicPlayer = () => {
           currentSongId={currentSong.id}
           onClose={() => setShowPlaylist(false)}
           onSelectSong={handleSelectSong}
+          onDeleteSong={(id) => {
+            removeLikedSong(id);
+            setPlaylist((prev) => prev.filter((s) => s.id !== id));
+              }}
         />
 
         <LyricsSidebar

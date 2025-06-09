@@ -116,9 +116,9 @@ export const SearchModal: React.FC<Props> = ({ visible, onClose, onSelectSong })
       
       {/* Modal */}
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl mx-4">
-        <div className="glass-strong rounded-2xl p-6 max-h-[80vh] flex flex-col">
+        <div className="glass-strong rounded-2xl p-3 max-h-[80vh] flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          {/* <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">Search Songs</h2>
             <Button 
               variant="ghost" 
@@ -128,15 +128,16 @@ export const SearchModal: React.FC<Props> = ({ visible, onClose, onSelectSong })
             >
               <X className="w-5 h-5" />
             </Button>
-          </div>
+          </div> */}
 
           {/* Search Input */}
-          <div className="relative mb-4">
+          {/* mb-1 resposible for margin below search box */}
+          <div className="relative mb-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               ref={inputRef}
               type="text"
-              placeholder="Search for songs, artists, or albums..."
+              placeholder="Search for songs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20"
@@ -149,8 +150,8 @@ export const SearchModal: React.FC<Props> = ({ visible, onClose, onSelectSong })
           {/* Results */}
           <div className="flex-1 overflow-y-auto">
             {searchQuery.trim().length < 2 ? (
-              <div className="text-center py-8 text-gray-400">
-                Start typing to search for songs...
+              <div className="text-center py-0 text-gray-400">
+                {/* Start typing to search for songs... */}
               </div>
             ) : isLoading ? (
               <div className="text-center py-8 text-gray-400">
