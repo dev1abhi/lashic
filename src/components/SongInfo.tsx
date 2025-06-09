@@ -53,6 +53,10 @@ export const SongInfo: React.FC<Props> = ({
     {/* <p className="text-xl text-gray-400">{album}</p> */}
 
     <div className="flex space-x-4 mt-8">
+      <Button variant="ghost" onClick={onToggleSearch} className="pl-0 text-white hover:bg-white/10 flex items-center space-x-2">
+        <Search className="w-5 h-5" />
+        <span>Search</span>
+      </Button>
       <Button variant="ghost" onClick={onTogglePlaylist} className="pl-0 text-white hover:bg-white/10 flex items-center space-x-2">
         <List className="w-5 h-5" />
         <span>Playlist</span>
@@ -61,10 +65,7 @@ export const SongInfo: React.FC<Props> = ({
         <FileText className="w-5 h-5" />
         <span>Lyrics</span>
       </Button>
-      <Button variant="ghost" onClick={onToggleSearch} className="text-white hover:bg-white/10 flex items-center space-x-2">
-        <Search className="w-5 h-5" />
-        <span>Search</span>
-      </Button>
+      
 
 
 
@@ -80,7 +81,7 @@ export const SongInfo: React.FC<Props> = ({
         <Heart className="w-5 h-5 fill-current" fill={isLiked ? 'currentColor' : 'none'} />
         <span>{isLiked ? 'Liked' : 'Like'}</span>
       </Button>
-      
+
     </div>
   </div>
 );
