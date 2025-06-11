@@ -40,18 +40,67 @@ const sampleSongs: Song[] = [
 
 
 // BackgroundFlow component: Animated colored blobs background
-const BackgroundFlow: React.FC<{ colors: { primary: string; secondary: string; accent: string }; isPlaying: boolean }> = ({ colors, isPlaying }) => {
+// const BackgroundFlow: React.FC<{ colors: { primary: string; secondary: string; accent: string }; isPlaying: boolean }> = ({ colors, isPlaying }) => {
+//   return (
+//     <div
+//       aria-hidden="true"
+//       className="background-flow"
+//       style={{
+//         '--color1': colors.primary,
+//         '--color2': colors.secondary,
+//         '--color3': colors.accent,
+//         animationPlayState: isPlaying ? 'running' : 'paused',
+//       } as React.CSSProperties}
+//     />
+//   );
+// };
+
+// const BackgroundFlow: React.FC<{ colors: string[]; isPlaying: boolean }> = ({
+//   colors,
+//   isPlaying,
+// }) => {
+//   return (
+//     <div
+//       className="background-flow"
+//       aria-hidden="true"
+//       style={
+//         {
+//           '--color-list': colors.join(','),
+//           animationPlayState: isPlaying ? 'running' : 'paused',
+//         } as React.CSSProperties
+//       }
+//     />
+//   );
+// };
+
+const BackgroundFlow: React.FC<{ colors: { primary: string; secondary: string; accent: string }; isPlaying: boolean }> = ({
+  colors,
+  isPlaying,
+}) => {
   return (
-    <div
-      aria-hidden="true"
-      className="background-flow"
-      style={{
-        '--color1': colors.primary,
-        '--color2': colors.secondary,
-        '--color3': colors.accent,
-        animationPlayState: isPlaying ? 'running' : 'paused',
-      } as React.CSSProperties}
-    />
+    <div className="background-flow" aria-hidden="true">
+      <div
+        className="blob blob1"
+        style={{
+          backgroundColor: colors.primary,
+          animationPlayState: isPlaying ? 'running' : 'paused',
+        }}
+      />
+      <div
+        className="blob blob2"
+        style={{
+          backgroundColor: colors.secondary,
+          animationPlayState: isPlaying ? 'running' : 'paused',
+        }}
+      />
+      <div
+        className="blob blob3"
+        style={{
+          backgroundColor: colors.accent,
+          animationPlayState: isPlaying ? 'running' : 'paused',
+        }}
+      />
+    </div>
   );
 };
 
@@ -69,9 +118,22 @@ export const MusicPlayer = () => {
   //called the getLikedSongs function to get the liked songs from local storage
   const [playlist, setPlaylist] = useState<Song[]>(getLikedSongs());
 
-  const [extractedColors, setExtractedColors] = useState(
-    sampleSongs[0].colors // fallback to sample song colors
-  );
+  // const [extractedColors, setExtractedColors] = useState(
+  //   sampleSongs[0].colors // fallback to sample song colors
+  // );
+
+const [extractedColors, setExtractedColors] = useState<string[]>([
+  sampleSongs[0].colors.primary,
+  sampleSongs[0].colors.secondary,
+  sampleSongs[0].colors.accent,
+]);
+
+
+const [primaryColor, setPrimaryColor] = useState(sampleSongs[0].colors.primary);
+const [secondaryColor, setSecondaryColor] = useState(sampleSongs[0].colors.secondary);
+const [accentColor, setAccentColor] = useState(sampleSongs[0].colors.accent);
+
+
   const [progress, setProgress] = useState(0);
   const [currentSong, setCurrentSong] = useState(sampleSongs[0]);
   const defaultSong = sampleSongs[0];
@@ -89,13 +151,39 @@ useEffect(() => {
 
 
 //extract colors from the current song's poster when it changes
-  useEffect(() => {
+//receiving colors from colorsUtils
+//   useEffect(() => {
+//   if (currentSong) {
+//     extractColorsFromImage(currentSong.poster).then((colors) => {
+//       setExtractedColors(colors);
+//       document.documentElement.style.setProperty('--theme-primary', colors.primary);
+//       document.documentElement.style.setProperty('--theme-secondary', colors.secondary);
+//       document.documentElement.style.setProperty('--theme-accent', colors.accent);
+//     });
+//   }
+// }, [currentSong]);
+
+
+// useEffect(() => {
+//   if (currentSong) {
+//     extractColorsFromImage(currentSong.poster).then((colors) => {
+//       setExtractedColors(colors);
+//       const root = document.documentElement;
+//       colors.forEach((c, i) => {
+//         root.style.setProperty(`--color${i + 1}`, c);
+//       });
+//     });
+//   }
+// }, [currentSong]);
+
+
+useEffect(() => {
   if (currentSong) {
     extractColorsFromImage(currentSong.poster).then((colors) => {
-      setExtractedColors(colors);
-      document.documentElement.style.setProperty('--theme-primary', colors.primary);
-      document.documentElement.style.setProperty('--theme-secondary', colors.secondary);
-      document.documentElement.style.setProperty('--theme-accent', colors.accent);
+      // Optional: use `setTimeout` to stagger if you want
+      setPrimaryColor(colors[0]);
+      setSecondaryColor(colors[1]);
+      setAccentColor(colors[2]);
     });
   }
 }, [currentSong]);
@@ -206,7 +294,16 @@ const prevSong = () => {
       />
 
       {/* Animated flowing colored background */}
-      <BackgroundFlow colors={extractedColors} isPlaying={isPlaying} />
+      {/* <BackgroundFlow colors={extractedColors} isPlaying={isPlaying} /> */}
+
+      <BackgroundFlow
+  colors={{
+    primary: primaryColor,
+    secondary: secondaryColor,
+    accent: accentColor,
+  }}
+  isPlaying={isPlaying}
+/>
 
       {/* Glass pane blur overlay */}
       <div className="glass-pane" aria-hidden="true" />
