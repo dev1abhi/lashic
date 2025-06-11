@@ -2,6 +2,14 @@ import { SaavnSearchResponse, SaavnSong, Song } from '@/components/types';
 
 const SAAVN_API_BASE = 'https://jiosavan-api2.vercel.app/api';
 
+
+
+  function decodeHtmlEntities(text: string): string {
+  const txt = document.createElement('textarea');
+  txt.innerHTML = text;
+  return txt.value;
+}
+
 export class SaavnApiService {
   static async searchSongs(query: string): Promise<Song[]> {
     try {
@@ -23,6 +31,8 @@ export class SaavnApiService {
       return [];
     }
   }
+
+
 
   private static transformSaavnSongToSong(saavnSong: SaavnSong): Song {
     // Get the highest quality image
@@ -50,9 +60,9 @@ export class SaavnApiService {
 
     return {
       id: saavnSong.id,
-      title: saavnSong.name,
-      artist: primaryArtist,
-      album: albumName,
+     title: decodeHtmlEntities(saavnSong.name),
+     artist: decodeHtmlEntities(primaryArtist),
+     album: decodeHtmlEntities(albumName),
       duration: formatDuration(saavnSong.duration),
       poster: image?.url || '',
       audioUrl: audioUrl,

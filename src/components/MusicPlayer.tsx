@@ -122,11 +122,11 @@ export const MusicPlayer = () => {
   //   sampleSongs[0].colors // fallback to sample song colors
   // );
 
-const [extractedColors, setExtractedColors] = useState<string[]>([
-  sampleSongs[0].colors.primary,
-  sampleSongs[0].colors.secondary,
-  sampleSongs[0].colors.accent,
-]);
+// const [extractedColors, setExtractedColors] = useState<string[]>([
+//   sampleSongs[0].colors.primary,
+//   sampleSongs[0].colors.secondary,
+//   sampleSongs[0].colors.accent,
+// ]);
 
 
 const [primaryColor, setPrimaryColor] = useState(sampleSongs[0].colors.primary);
@@ -251,8 +251,6 @@ const prevSong = () => {
     setIsPlaying(false);
   };
 
- 
-  
   const handleAudioEnded = () => {
   if (isRepeat) {
     setCurrentTime(0); // Go back to beginning
