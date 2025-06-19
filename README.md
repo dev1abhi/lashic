@@ -1,3 +1,5 @@
+<img src="https://github.com/user-attachments/assets/71d8b3c2-a815-4cfa-90f5-d1bf62128cb1" alt="image" style="border-radius: 70px; width: 1200px;" />
+
 
 # Lashic
 
