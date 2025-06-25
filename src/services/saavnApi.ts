@@ -94,4 +94,74 @@ export class SaavnApiService {
       return null;
     }
   }
+
+  // Get song recommendations based on current song
+  static async getSongRecommendations(songId: string): Promise<Song[]> {
+    try {
+      const response = await fetch(`${SAAVN_API_BASE}/songs/${songId}/suggestions`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.success || !data.data) {
+        return [];
+      }
+      
+      return data.data.map(this.transformSaavnSongToSong);
+    } catch (error) {
+      console.error('Error fetching song recommendations:', error);
+      return [];
+    }
+  }
+
+  // Get trending/featured songs as fallback
+  static async getTrendingSongs(): Promise<Song[]> {
+    try {
+      // Using search with popular terms as fallback since trending endpoint might not exist
+      const popularQueries = ['trending', 'popular', 'latest', 'bollywood', 'hindi'];
+      const randomQuery = popularQueries[Math.floor(Math.random() * popularQueries.length)];
+      
+      const response = await fetch(`${SAAVN_API_BASE}/search/songs?query=${encodeURIComponent(randomQuery)}&limit=10`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: SaavnSearchResponse = await response.json();
+      
+      if (!data.success || !data.data.results) {
+        return [];
+      }
+      
+      return data.data.results.slice(0, 10).map(this.transformSaavnSongToSong);
+    } catch (error) {
+      console.error('Error fetching trending songs:', error);
+      return [];
+    }
+  }
+
+  // Get related songs based on artist
+  static async getArtistSongs(artistName: string): Promise<Song[]> {
+    try {
+      const response = await fetch(`${SAAVN_API_BASE}/search/songs?query=${encodeURIComponent(artistName)}&limit=10`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: SaavnSearchResponse = await response.json();
+      
+      if (!data.success || !data.data.results) {
+        return [];
+      }
+      
+      return data.data.results.slice(0, 10).map(this.transformSaavnSongToSong);
+    } catch (error) {
+      console.error('Error fetching artist songs:', error);
+      return [];
+    }
+  }
 }

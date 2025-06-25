@@ -10,6 +10,7 @@ import { AudioPlayer } from './AudioPlayer';
 import { Slider } from './ui/slider';
 import { toast } from '@/components/ui/sonner';
 import { extractColorsFromImage } from '../utils/colorUtils';
+import { SaavnApiService } from '../services/saavnApi';
 
 
 import {
@@ -114,6 +115,11 @@ export const MusicPlayer = () => {
   const [showLyrics, setShowLyrics] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
+  const [isAutoplay, setIsAutoplay] = useState(true);
+  const [autoplayQueue, setAutoplayQueue] = useState<Song[]>([]);
+  const [playedSongs, setPlayedSongs] = useState<Set<string>>(new Set());
+  const [isLoadingNext, setIsLoadingNext] = useState(false);
+  const [autoplayHistory, setAutoplayHistory] = useState<Song[]>([]);
 
   //called the getLikedSongs function to get the liked songs from local storage
   const [playlist, setPlaylist] = useState<Song[]>(getLikedSongs());
@@ -188,33 +194,89 @@ useEffect(() => {
   }
 }, [currentSong]);
 
-  // Global keyboard shortcut for search
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setShowSearch(true);
+
+
+ const nextSong = async () => {
+  if (!currentSong) return;
+
+  // If autoplay is enabled, use autoplay navigation
+  if (isAutoplay) {
+    // Add current song to autoplay history
+    setAutoplayHistory(prev => [...prev, currentSong]);
+    
+    // Check if we have songs in autoplay queue
+    if (autoplayQueue.length > 0) {
+      const nextSong = autoplayQueue[0];
+      setCurrentSong(nextSong);
+      setAutoplayQueue(prev => prev.slice(1));
+      toast.info(`Next: ${nextSong.title} by ${nextSong.artist}`);
+      return;
+    }
+
+    // If no autoplay queue, fetch recommendations
+    setIsLoadingNext(true);
+    try {
+      const recommendations = await fetchAutoplayRecommendations(currentSong);
+      if (recommendations.length > 0) {
+        const nextSong = recommendations[0];
+        setCurrentSong(nextSong);
+        setAutoplayQueue(recommendations.slice(1));
+        toast.info(`Next: ${nextSong.title} by ${nextSong.artist}`);
+      } else {
+        toast.info('No more recommendations available');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching next song:', error);
+      toast.error('Failed to load next song');
+    } finally {
+      setIsLoadingNext(false);
+    }
+  } else {
+    // Default behavior: navigate through liked songs playlist
+    if (!playlist.length) {
+      toast.info('No songs in playlist');
+      return;
+    }
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
- const nextSong = () => {
-  if (!playlist.length || !currentSong) return;
-
-  const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
-  const nextIndex = (currentIndex + 1) % playlist.length;
-  setCurrentSong(playlist[nextIndex]);
+    const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
+    const nextIndex = (currentIndex + 1) % playlist.length;
+    setCurrentSong(playlist[nextIndex]);
+    toast.info(`Next: ${playlist[nextIndex].title}`);
+  }
 };
 
 const prevSong = () => {
-  if (!playlist.length || !currentSong) return;
+  if (!currentSong) return;
 
-  const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
-  const prevIndex = currentIndex === 0 ? playlist.length - 1 : currentIndex - 1;
-  setCurrentSong(playlist[prevIndex]);
+  // If autoplay is enabled, use autoplay history navigation
+  if (isAutoplay) {
+    if (autoplayHistory.length > 0) {
+      // Get the last song from history
+      const previousSong = autoplayHistory[autoplayHistory.length - 1];
+      
+      // Add current song to the front of autoplay queue for potential forward navigation
+      setAutoplayQueue(prev => [currentSong, ...prev]);
+      
+      // Remove the song we're going back to from history
+      setAutoplayHistory(prev => prev.slice(0, -1));
+      
+      setCurrentSong(previousSong);
+      toast.info(`Previous: ${previousSong.title} by ${previousSong.artist}`);
+    } else {
+      toast.info('No previous songs in autoplay history');
+    }
+  } else {
+    // Default behavior: navigate through liked songs playlist
+    if (!playlist.length) {
+      toast.info('No songs in playlist');
+      return;
+    }
+
+    const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
+    const prevIndex = currentIndex === 0 ? playlist.length - 1 : currentIndex - 1;
+    setCurrentSong(playlist[prevIndex]);
+    toast.info(`Previous: ${playlist[prevIndex].title}`);
+  }
 };
 
   const handleSelectSong = (song: Song) => {
@@ -251,18 +313,122 @@ const prevSong = () => {
     setIsPlaying(false);
   };
 
-  const handleAudioEnded = () => {
-  if (isRepeat) {
-    setCurrentTime(0); // Go back to beginning
-    setIsPlaying(true); // Restart the song
-  } else if (playlist.length <= 1) {
-    // If there's no next song (only current or empty)
-    setCurrentTime(0); // Reset song time
-    setIsPlaying(false); // Optionally pause
-  } else {
-    nextSong(); // Go to next song in the playlist
-  }
-};
+  // Function to fetch autoplay recommendations
+  const fetchAutoplayRecommendations = async (currentSong: Song): Promise<Song[]> => {
+    try {
+      let allRecommendations: Song[] = [];
+      
+      // Try to get song recommendations first
+      let recommendations = await SaavnApiService.getSongRecommendations(currentSong.id);
+      allRecommendations = allRecommendations.concat(recommendations);
+      
+      // Also try artist songs for variety
+      const artistSongs = await SaavnApiService.getArtistSongs(currentSong.artist);
+      allRecommendations = allRecommendations.concat(artistSongs);
+      
+      // If still not enough, get trending songs
+      if (allRecommendations.length < 10) {
+        const trendingSongs = await SaavnApiService.getTrendingSongs();
+        allRecommendations = allRecommendations.concat(trendingSongs);
+      }
+      
+      // Remove duplicates by ID
+      const uniqueRecommendations = allRecommendations.filter((song, index, self) => 
+        index === self.findIndex(s => s.id === song.id)
+      );
+      
+      // Filter out the current song, playlist songs, and already played songs
+      const filteredRecommendations = uniqueRecommendations.filter(song => 
+        song.id !== currentSong.id && 
+        !playlist.some(p => p.id === song.id) &&
+        !playedSongs.has(song.id)
+      );
+      
+      // If we don't have enough fresh recommendations, clear some played history
+      if (filteredRecommendations.length < 3 && playedSongs.size > 20) {
+        console.log('Clearing some played songs history for variety');
+        const playedArray = Array.from(playedSongs);
+        const keepRecent = playedArray.slice(-10); // Keep last 10 played songs
+        setPlayedSongs(new Set(keepRecent));
+        
+        // Re-filter with reduced history
+        return uniqueRecommendations.filter(song => 
+          song.id !== currentSong.id && 
+          !playlist.some(p => p.id === song.id) &&
+          !keepRecent.includes(song.id)
+        ).slice(0, 8);
+      }
+      
+      return filteredRecommendations.slice(0, 8);
+    } catch (error) {
+      console.error('Error fetching autoplay recommendations:', error);
+      return [];
+    }
+  };
+
+  const handleAudioEnded = async () => {
+    // Prevent multiple simultaneous calls
+    if (isLoadingNext) {
+      return;
+    }
+
+    // Mark current song as played and add to autoplay history if autoplay is enabled
+    setPlayedSongs(prev => new Set([...prev, currentSong.id]));
+    if (isAutoplay) {
+      setAutoplayHistory(prev => [...prev, currentSong]);
+    }
+
+    if (isRepeat) {
+      setCurrentTime(0); // Go back to beginning
+      setIsPlaying(true); // Restart the song
+      return;
+    }
+
+    // Check if there are more songs in the user's playlist
+    if (playlist.length > 1) {
+      const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
+      const nextIndex = (currentIndex + 1) % playlist.length;
+      setCurrentSong(playlist[nextIndex]);
+      return;
+    }
+
+    // If autoplay is enabled and we're at the end of user's playlist
+    if (isAutoplay) {
+      setIsLoadingNext(true);
+      
+      try {
+        // Check if we have songs in autoplay queue
+        if (autoplayQueue.length > 0) {
+          const nextSong = autoplayQueue[0];
+          setCurrentSong(nextSong);
+          setAutoplayQueue(prev => prev.slice(1)); // Remove the song we're about to play
+          toast.info(`Autoplay: ${nextSong.title} by ${nextSong.artist}`);
+          setIsLoadingNext(false);
+          return;
+        }
+
+        // Fetch new recommendations if autoplay queue is empty
+        const recommendations = await fetchAutoplayRecommendations(currentSong);
+        if (recommendations.length > 0) {
+          const nextSong = recommendations[0];
+          setCurrentSong(nextSong);
+          setAutoplayQueue(recommendations.slice(1)); // Store remaining songs for later
+          toast.info(`Autoplay: ${nextSong.title} by ${nextSong.artist}`);
+          setIsLoadingNext(false);
+          return;
+        }
+      } catch (error) {
+        console.error('Error in autoplay:', error);
+      } finally {
+        setIsLoadingNext(false);
+      }
+    }
+
+    // If no autoplay or no recommendations found, stop playing
+    setCurrentTime(0);
+    setIsPlaying(false);
+    toast.info('Playback ended');
+  };
 
 // Function to check if a song is liked
   const handleLikeToggle = () => {
@@ -276,6 +442,122 @@ const prevSong = () => {
     setPlaylist((prev) => [...prev, currentSong]);
   }
 };
+
+// Function to toggle autoplay
+const handleAutoplayToggle = () => {
+  setIsAutoplay(prev => {
+    const newAutoplayState = !prev;
+    toast.info(newAutoplayState ? 'Autoplay enabled' : 'Autoplay disabled');
+    return newAutoplayState;
+  });
+};
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent keyboard shortcuts when user is typing in input fields
+      const isInputFocused = 
+        document.activeElement?.tagName === 'INPUT' ||
+        document.activeElement?.tagName === 'TEXTAREA' ||
+        (document.activeElement as HTMLElement)?.contentEditable === 'true';
+
+      if (isInputFocused) return;
+
+      // Search shortcut (Ctrl/Cmd + K)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(true);
+        return;
+      }
+
+      // Spacebar for play/pause
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        setIsPlaying(prev => {
+          const newPlayState = !prev;
+          toast.info(newPlayState ? 'Playing' : 'Paused');
+          return newPlayState;
+        });
+        return;
+      }
+
+      // Arrow keys for volume control
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setVolume(prev => {
+          const newVolume = Math.min(100, prev + 5);
+          toast.info(`Volume: ${newVolume}%`);
+          return newVolume;
+        });
+        return;
+      }
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setVolume(prev => {
+          const newVolume = Math.max(0, prev - 5);
+          toast.info(`Volume: ${newVolume}%`);
+          return newVolume;
+        });
+        return;
+      }
+
+      // Left/Right arrow keys for seeking (±5 seconds)
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (duration > 0) {
+          const newTime = Math.max(0, currentTime - 5);
+          const newProgress = (newTime / duration) * 100;
+          onTimeChange(newProgress);
+          toast.info(`Seek: -5s`);
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (duration > 0) {
+          const newTime = currentTime + 5;
+          // If seeking would go beyond the end, trigger next song
+          if (newTime >= duration) {
+            handleAudioEnded();
+            toast.info('End of song - Next track');
+          } else {
+            const newProgress = (newTime / duration) * 100;
+            onTimeChange(newProgress);
+            toast.info(`Seek: +5s`);
+          }
+        }
+        return;
+      }
+
+      // Comma (,) for previous song
+      if (e.key === ',') {
+        e.preventDefault();
+        prevSong();
+        toast.info('Previous song');
+        return;
+      }
+
+      // Period (.) for next song
+      if (e.key === '.') {
+        e.preventDefault();
+        nextSong();
+        toast.info('Next song');
+        return;
+      }
+
+      // 'A' key for autoplay toggle
+      if (e.key === 'a' || e.key === 'A') {
+        e.preventDefault();
+        handleAutoplayToggle();
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentTime, duration, onTimeChange, handleAutoplayToggle, prevSong, nextSong, handleAudioEnded]);
 
   return (
     <>
@@ -371,6 +653,8 @@ const prevSong = () => {
             progress={progress || 0}
             isRepeat={isRepeat}
             onToggleRepeat={() => setIsRepeat(prev => !prev)}
+            isAutoplay={isAutoplay}
+            onToggleAutoplay={handleAutoplayToggle}
           />
         </div>
       </div>

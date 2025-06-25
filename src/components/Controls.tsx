@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, Radio } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import WavySlider from './ui/wavyslider';
 
@@ -17,6 +17,8 @@ interface Props {
   onVolumeChange: (val: number) => void;
   isRepeat: boolean;
   onToggleRepeat: () => void;
+  isAutoplay: boolean;
+  onToggleAutoplay: () => void;
 }
 
 export const Controls: React.FC<Props> = ({
@@ -30,6 +32,8 @@ export const Controls: React.FC<Props> = ({
   onTimeChange,
   isRepeat,
   onToggleRepeat,
+  isAutoplay,
+  onToggleAutoplay,
 }) => {
 
 
@@ -77,6 +81,17 @@ export const Controls: React.FC<Props> = ({
            onClick={onToggleRepeat}
           >
          <Repeat className="w-5 h-5" />
+         </Button>
+
+          {/* autoplay toggle */}
+          <Button
+           variant="ghost"
+           size="icon"
+           className={`hover:bg-white/10 ${isAutoplay ? 'text-blue-400' : 'text-white'}`}
+           onClick={onToggleAutoplay}
+           title={isAutoplay ? 'Autoplay enabled' : 'Autoplay disabled'}
+          >
+         <Radio className="w-5 h-5" />
          </Button>
          
         </div>
