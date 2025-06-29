@@ -66,58 +66,59 @@ export const MusicPlayer = () => {
 
   // Handle audio ended
   const handleAudioEnded = async () => {
-    if (autoplay.isLoadingNext) return;
+      if (autoplay.isLoadingNext) return;
 
-    autoplay.setPlayedSongs(prev => new Set([...prev, currentSong.id]));
-    if (autoplay.isAutoplay) {
-      autoplay.setAutoplayHistory(prev => [...prev, currentSong]);
-    }
+  autoplay.setPlayedSongs(prev => new Set([...prev, currentSong.id]));
+  if (autoplay.isAutoplay) {
+    autoplay.setAutoplayHistory(prev => [...prev, currentSong]);
+  }
 
-    if (audioPlayer.isRepeat) {
-      audioPlayer.setCurrentTime(0);
-      audioPlayer.setIsPlaying(true);
-      return;
-    }
-
-    if (playlist.playlist.length > 1) {
-      const currentIndex = playlist.playlist.findIndex(song => song.id === currentSong.id);
-      const nextIndex = (currentIndex + 1) % playlist.playlist.length;
-      setCurrentSong(playlist.playlist[nextIndex]);
-      return;
-    }
-
-    if (autoplay.isAutoplay) {
-      autoplay.setIsLoadingNext(true);
-      
-      try {
-        if (autoplay.autoplayQueue.length > 0) {
-          const nextSong = autoplay.autoplayQueue[0];
-          setCurrentSong(nextSong);
-          autoplay.setAutoplayQueue(prev => prev.slice(1));
-          toast.info(`Autoplay: ${nextSong.title} by ${nextSong.artist}`);
-          autoplay.setIsLoadingNext(false);
-          return;
-        }
-
-        const recommendations = await autoplay.fetchAutoplayRecommendations(currentSong);
-        if (recommendations.length > 0) {
-          const nextSong = recommendations[0];
-          setCurrentSong(nextSong);
-          autoplay.setAutoplayQueue(recommendations.slice(1));
-          toast.info(`Autoplay: ${nextSong.title} by ${nextSong.artist}`);
-          autoplay.setIsLoadingNext(false);
-          return;
-        }
-      } catch (error) {
-        console.error('Error in autoplay:', error);
-      } finally {
-        autoplay.setIsLoadingNext(false);
-      }
-    }
-
+  // Priority 1: repeat
+  if (audioPlayer.isRepeat) {
     audioPlayer.setCurrentTime(0);
-    audioPlayer.setIsPlaying(false);
-    toast.info('Playback ended');
+    audioPlayer.setIsPlaying(true);
+    return;
+  }
+
+  // Priority 2: autoplay
+  if (autoplay.isAutoplay) {
+    autoplay.setIsLoadingNext(true);
+    try {
+      if (autoplay.autoplayQueue.length > 0) {
+        const nextSong = autoplay.autoplayQueue[0];
+        setCurrentSong(nextSong);
+        autoplay.setAutoplayQueue(prev => prev.slice(1));
+        toast.info(`Autoplay: ${nextSong.title} by ${nextSong.artist}`);
+        return;
+      }
+
+      const recommendations = await autoplay.fetchAutoplayRecommendations(currentSong);
+      if (recommendations.length > 0) {
+        const nextSong = recommendations[0];
+        setCurrentSong(nextSong);
+        autoplay.setAutoplayQueue(recommendations.slice(1));
+        toast.info(`Autoplay: ${nextSong.title} by ${nextSong.artist}`);
+        return;
+      }
+    } catch (error) {
+      console.error('Error in autoplay:', error);
+    } finally {
+      autoplay.setIsLoadingNext(false);
+    }
+  }
+
+  // Priority 3: playlist
+  if (playlist.playlist.length > 1) {
+    const currentIndex = playlist.playlist.findIndex(song => song.id === currentSong.id);
+    const nextIndex = (currentIndex + 1) % playlist.playlist.length;
+    setCurrentSong(playlist.playlist[nextIndex]);
+    return;
+  }
+
+  // Fallback: stop playback
+  audioPlayer.setCurrentTime(0);
+  audioPlayer.setIsPlaying(false);
+  toast.info('Playback ended');
   };
 
   // Set first song from playlist if current song is default
