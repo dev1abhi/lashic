@@ -53,10 +53,22 @@ export const Controls: React.FC<Props> = ({
       <div className="flex flex-col items-center justify-center space-y-6 w-full">
         <div className="flex items-center justify-center space-x-6">
 
-          {/* shuffling */}
+{/*         
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
             <Shuffle className="w-5 h-5" />
-          </Button>
+          </Button> */}
+
+
+           {/* autoplay toggle */}
+          <Button
+           variant="ghost"
+           size="icon"
+           className={`hover:bg-white/10 ${isAutoplay ? 'text-blue-400' : 'text-white'}`}
+           onClick={onToggleAutoplay}
+           title={isAutoplay ? 'Autoplay enabled' : 'Autoplay disabled'}
+          >
+         <Radio className="w-5 h-5" />
+         </Button>
 
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={onPrev}>
             <SkipBack className="w-6 h-6" />
@@ -83,16 +95,7 @@ export const Controls: React.FC<Props> = ({
          <Repeat className="w-5 h-5" />
          </Button>
 
-          {/* autoplay toggle */}
-          <Button
-           variant="ghost"
-           size="icon"
-           className={`hover:bg-white/10 ${isAutoplay ? 'text-blue-400' : 'text-white'}`}
-           onClick={onToggleAutoplay}
-           title={isAutoplay ? 'Autoplay enabled' : 'Autoplay disabled'}
-          >
-         <Radio className="w-5 h-5" />
-         </Button>
+         
          
         </div>
 
